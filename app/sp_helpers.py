@@ -154,7 +154,6 @@ def get_config_processor(app):
         'version': __version__,
         'use_cdn': app.config.get('USE_CDN', False),
         'apps': app.config['apps'],
-        'navs': Namespace(app.config[NAVS_KEY]),
     }
     return lambda: context
 
