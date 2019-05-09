@@ -1,12 +1,12 @@
-
+import os
 import requests
 import socket
 from app.controller import tasks
+from app.controller.api import api
 from .cache import cache
 from cachetools import cached, TTLCache
 from flask import current_app as app, request, Blueprint
 from flask.helpers import send_file
-from io import open as iopen
 from pprint import pformat
 from urllib.parse import parse_qs, urlsplit
 
@@ -14,19 +14,21 @@ bp = Blueprint('charter', __name__)
 
 # adapted from https://gist.github.com/hanleybrand/4221658
 def save_png(file_url):
-    image_dir = 'images/'
-    file_name =  urlsplit(file_url)[2].split('/')[-1] 
+    image_dir = os.environ["IMAGES_PATH"]
     mime_type = 'png'
-    file_path = image_dir + file_name + ('.' + mime_type if mime_type not in file_name else '')
-    print(file_url)
-    i = requests.get(file_url)
-    if i.status_code == requests.codes.ok:
-        with iopen(file_path, 'wb') as file:
-            file.write(i.content)
-        return '../' + file_path, mime_type
+    file_name = urlsplit(file_url)[2].split('/')[-1]
+    file_with_type = file_name + ('.' + mime_type if mime_type not in file_name else '') 
+    file_path = os.path.join(image_dir, file_with_type)
+    print(file_path)
+    response = requests.get(file_url)
+    if response.status_code == requests.codes.ok:
+        with open(file_path, 'wb') as file:
+            file.write(response.content)
+        return file_path
     else:
         return False
 
+# Only the path to the file will be cached
 @cache.memoize(timeout=10)
 def cached_generate(chart_ID):
     print("generated", chart_ID)
@@ -53,7 +55,7 @@ def new_submission():
         app.logger.debug("Hook token doesn't match or was missing in POST")
         return "Bad auth token: missing or invalid", 401
     reported_site_parsed = urlsplit(post_data.get('site'))
-    base_url_netloc = urlsplit(app.config['BASE_URL']).netloc
+    base_url_netloc = urlsplit(app.config['API_BASE_URL']).netloc
     reported_netloc = reported_site_parsed.netloc
     if base_url_netloc != reported_netloc:
         app.logger.debug("base_url netloc in config %s doesn't match POST parameter 'site' %s netloc",
@@ -64,17 +66,17 @@ def new_submission():
     if client_ip not in supposed_ips:
         app.logger.debug("Client ip %s doesn't match reported ips %s in POST body", client_ip, supposed_ips)
         return "Deceptive: client does not match POST parameter 'site' after resolve", 400
-    app.logger.debug(pformat(dict(post_data)))
+    app.logger.debug('\n%s', pformat(dict(post_data)))
     tasks.save_submission.apply_async(args=[post_data.get('submission_id')], countdown=5)
 
     return "OK", 204
 
 @bp.route('/chart/<string:chart_ID>', methods=['GET'])
 def give_chart(chart_ID):
-    result = cached_generate(chart_ID)
-    if result:
-        path, extension = result
-        resp = send_file(path, mimetype='image/' + extension)
+    path = cached_generate(chart_ID)
+    if path:
+        mime = 'image/png'
+        resp = send_file(path, mimetype=mime)
     else:
         resp = ("Chart was not found", 404)
     return resp

@@ -1,7 +1,9 @@
-
 from .config import Config
 from app.sp_helpers import Flask
-from app.controller import views, tasks, celery, cache, db
+from app.controller import views, tasks, cache
+from app.controller.api import api
+from .db import db
+import logging
 
 def create_app(debug=False):
     return entrypoint(debug=debug, mode='app')
@@ -28,13 +30,18 @@ def entrypoint(debug=False, mode='app'):
     app.wrap_middleware()
     app.finalize_create()
 
+    app.logger.setLevel(logging.DEBUG)
+
     configure_celery(app, tasks.celery)
+    api.token = app.config.get('API_TOKEN')
+    api.set_base_url_from(app.config.get('API_BASE_URL'))
     cache.cache.init_app(app)
+    db.init_app(app)
 
     if mode=='app':
         return app
     elif mode=='celery':
-        return celery
+        return tasks.celery
 
 
 def configure_celery(app, celery):

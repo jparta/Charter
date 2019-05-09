@@ -7,12 +7,11 @@ class Config():
     TESTING = False
     CSRF_ENABLED = True
     BEHIND_PROXY = True
-    BASE_URL = 'http://172.20.0.3:8000/api/v2/'
+    API_BASE_URL = 'http://172.20.0.3:8000/api/v2/'
     SUBMISSIONS_URL = '/submissions/' 
     SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
-    CELERY_BROKER_URL='amqp://admin:admin@localhost:5672/vhost'
-    CELERY_RESULT_BACKEND='amqp://guest@localhost//'
-                
+    CELERY_BROKER_URL='amqp://rabbitmq:5672'
+    CELERY_RESULT_BACKEND='amqp://rabbitmq:5672'
 
 
 class ProductionConfig(Config):

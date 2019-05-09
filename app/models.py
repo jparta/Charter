@@ -1,6 +1,6 @@
 from .db import db
 
-class Submission(db.Model):
-    __tablename__ = 'submissions'
+class DataPoint(db.Model):
+    __tablename__ = 'data_points'
 
     

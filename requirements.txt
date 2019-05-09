@@ -1,4 +1,4 @@
-a-plus-client==1.0.0
+git+https://github.com/Aalto-LeTech/a-plus-client.git#egg=a-plus-client
 alembic==1.0.8
 amqp==2.4.2
 billiard==3.6.0.0

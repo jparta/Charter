@@ -1,0 +1,44 @@
+version: '3.4'
+
+networks:
+  default:
+    external:
+      name: aplus_default
+
+services:
+  api:
+    build: 
+      context: .
+      dockerfile: ./Dockerfile
+    image: charter
+    container_name: api
+    command: flask run --host=0.0.0.0
+    env_file:
+      - ./docker.env
+    ports:
+      - "127.0.0.1:5000:5000"
+    volumes:
+      - ./app:/dockerapp/app/:ro
+  celery:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: charter
+    container_name: celery
+    depends_on:
+      - rabbitmq
+    command: celery worker -A entrypoint_celery.celery --loglevel=info
+    env_file:
+      - ./docker.env
+    volumes:
+      - .:/app/
+  rabbitmq:
+    image: rabbitmq:alpine
+    container_name: rabbitmq
+    volumes:
+     - ./conf/myrabbit.conf:/etc/rabbitmq/rabbitmq.conf
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
