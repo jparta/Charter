@@ -1,5 +1,6 @@
-venv/
+*.swo
+*.swp
+.idea/
 __pycache__/
 instance/
-*.swp
-*.swo
+venv/
