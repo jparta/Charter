@@ -7,7 +7,7 @@ class Config():
     TESTING = False
     CSRF_ENABLED = True
     BEHIND_PROXY = True
-    API_BASE_URL = 'http://172.20.0.3:8000/api/v2/'
+    API_BASE_URL = 'http://172.18.0.3:8000/api/v2/'
     SUBMISSIONS_URL = '/submissions/' 
     SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
     CELERY_BROKER_URL='amqp://rabbitmq:5672'
